@@ -1,0 +1,7 @@
+digraph {
+	check_stack -> run_gc[label="exhausted",weight="10"];
+	check_stack -> "x/=0"[label="ok",weight="90"];
+	".. factorial(x-1)" -> "x*call_result"[label="10",weight="10"];
+	"x/=0" -> ".. factorial(x-1)"[label="True",weight="49"];
+	"x/=0" -> "ret 1"[label="False",weight="51"];
+}
