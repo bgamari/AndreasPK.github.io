@@ -7,7 +7,7 @@ pipeline](https://ghc.haskell.org/trac/ghc/wiki/Commentary/Compiler/HscMain)
 ,[Cmm](https://ghc.haskell.org/trac/ghc/wiki/Commentary/Rts/Cmm) and a little
 bit of assembly.
 
-# Block Layout
+# Conditional Assignment
 
 As expected GHC's code generator eventually produces a list of basic blocks
 which are then layout out sequentially before finally being translated to
