@@ -120,9 +120,10 @@ nub functions. The benchmark included:
 * You likely won't get around using `containers` anyway
 
 Contraindications:
-* All your lists are <20 elements: Just us regular nub.
-* All your lists are > 500 elements, AND you will evaluate the whole list: Look into hashbased variants.
 * Your lists are Int. I'm sure there are better implementations for [Int].
+* You already have hashable instances. The hash based ones are slightly worse for smallish lists but otherwise better.
+* All your lists are <20 elements: Just us regular nub.
+* All your lists are > 500 elements, AND you will evaluate the whole list: Might be worth the trouble to write a hashable instance.
 
 ## Use a hash based version for long hashable lists.
 
@@ -133,7 +134,7 @@ this might still be acceptable when compared to implementing hashable/additional
 ## Other bits
 
 I would have expected `Data.Discrimination.nub` to do better. Maybe I did something wrong.
-Maybe the constants are just pretty high
+Maybe the constants are just pretty high for this usecase.
 
 I did NOT check how these perform in combination with list fusion, so that might matter for some code as well.
 
