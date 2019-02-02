@@ -57,7 +57,7 @@ It keeps a list of seen elements, and checks for each new element if it compares
 - O(n^2) runtime
 ```
 
-## containers - Data.ListUtils.ordNub
+## containers - Data.Containers.ListUtils.nubOrd
 
 Instead of using a list to keep track of seen elements it uses a Set.
 This means lookup only takes `log(n)` time instead of `n` making it a lot better.
@@ -120,7 +120,7 @@ nub functions. The benchmark included:
 * You likely won't get around using `containers` anyway
 
 Contraindications:
-* Your lists are Int. I'm sure there are better implementations for [Int].
+* Your lists are Int. I'm sure there are better implementations for \[Int\], eg [nubInt](https://hoogle.haskell.org/?hoogle=nubInt).
 * You already have hashable instances. The hash based ones are slightly worse for smallish lists but otherwise better.
 * All your lists are <20 elements: Just us regular nub.
 * All your lists are > 500 elements, AND you will evaluate the whole list: Might be worth the trouble to write a hashable instance.
@@ -130,6 +130,9 @@ Contraindications:
 After about 500-1k elements these became generally faster than the ord based ones.
 The largest difference I saw was a factor of about 2. Which is a lot, but depending on your code
 this might still be acceptable when compared to implementing hashable/additional code.
+
+/u/theindigamer on reddit pointed out that deriving Hashable is another good way
+to make this more attractive.
 
 ## Other bits
 
