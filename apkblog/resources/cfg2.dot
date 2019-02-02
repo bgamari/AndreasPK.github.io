@@ -1,0 +1,26 @@
+digraph {
+	ca47 -> ca4V[label="10",weight="10"];
+	ca4m -> ca4l[label="10",weight="10"];
+	ca4s -> ca4r[label="10",weight="10"];
+	ca4O -> ca4P[label="10",weight="10"];
+	ca4Q -> ca40[label="10",weight="10"];
+	ca4U -> ca4S[label="10",weight="10"];
+	ca4V -> ca46[label="10",weight="10"];
+	ca5b -> ca5e[label="10",weight="10"];
+	ca5e -> ca4r[label="10",weight="10"];
+	ca40 -> ca4l[label="49",weight="49"];
+	ca4l -> nabg[label="49",weight="49"];
+	ca4r -> ua5h[label="49",weight="49"];
+	ca55 -> ca4r[label="49",weight="49"];
+	nabg -> ca47[label="49",weight="49"];
+	ca40 -> ca4m[label="51",weight="51"];
+	ca4l -> ca55[label="51",weight="51"];
+	ca4r -> ca5b[label="51",weight="51"];
+	ca55 -> ca4s[label="51",weight="51"];
+	ca47 -> ca4U[label="90",weight="90"];
+	ca4O -> ca4Q[label="90",weight="90"];
+	ca5b -> ca5d[label="90",weight="90"];
+	ca46 -> ca47[label="100",weight="100"];
+	nabh -> ca47[label="100",weight="100"];
+	ua5h -> nabh[label="100",weight="100"];
+}
