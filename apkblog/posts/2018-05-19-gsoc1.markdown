@@ -1,5 +1,5 @@
 ---
-title: Improving GHC's code generation - Part 1
+title: Improving GHC's code generation - Summer of Code - Part 1
 ---
 
 This post assumes some knowledge about the [GHC compilation
