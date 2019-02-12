@@ -46,6 +46,7 @@ For example there is a more efficient implementation for `[0..n]` when we use In
 There are no equivalent rules for the sized variants so these can perform a lot worse.
 
 There is a [ticket](https://ghc.haskell.org/trac/ghc/ticket/15185) about the issue as well.
+
 ## Drawback #4: Int64 in particular can be very slow on 32bit.
 
 One would expect certain functions to be translated into only a handfull of assembly instructions.  

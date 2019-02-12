@@ -57,7 +57,7 @@ Skipping over quite a lot of details our assignments might look something like t
   // <load  v1>                   | registers: (v1,v2),       stack: [v3]
   v4 = v1 + v2; // v3,v4 live     | registers: (v4,empty),    stack: [v3]
   // <load  v3>                   | registers: (v4,v3),       stack: []
-  v4 = v4 + v3; // v1,v2,v3 live  | registers: (empty,v4)     stack: []
+  v4 = v4 + v3; // v4 live        | registers: (empty,v4)     stack: []
 
   return v4;
 ```

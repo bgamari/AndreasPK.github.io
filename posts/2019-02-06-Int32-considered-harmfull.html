@@ -50,7 +50,8 @@ So each Int8 takes two words. One for the constructor and one for the actual val
 <h2 id="pitfall-3-missing-rules">Pitfall #3: Missing Rules</h2>
 <p>GHC has many rules to optimize common constructs, replacing them with more efficient implementations. For example there is a more efficient implementation for <code>[0..n]</code> when we use Int.<br />
 There are no equivalent rules for the sized variants so these can perform a lot worse.</p>
-<p>There is a <a href="https://ghc.haskell.org/trac/ghc/ticket/15185">ticket</a> about the issue as well. ## Drawback #4: Int64 in particular can be very slow on 32bit.</p>
+<p>There is a <a href="https://ghc.haskell.org/trac/ghc/ticket/15185">ticket</a> about the issue as well.</p>
+<h2 id="drawback-4-int64-in-particular-can-be-very-slow-on-32bit.">Drawback #4: Int64 in particular can be very slow on 32bit.</h2>
 <p>One would expect certain functions to be translated into only a handfull of assembly instructions.<br />
 However on 32bit systems the 64 bit primitive operations are implemented as function calls, with according overhead.</p>
 <p>Here is a <a href="https://ghc.haskell.org/trac/ghc/ticket/5444">GHC Ticket</a> about the issue.</p>
