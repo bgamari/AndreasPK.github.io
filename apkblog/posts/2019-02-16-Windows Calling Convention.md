@@ -49,3 +49,17 @@ This can be used to store nonvolatile registers and other things.
 
 ![](/images/win_x64_stack_1.png "Typical windows stack")
 
+## Cmm Registers mappings on Amd64:
+
+| Cmm     | Assemby |
+| ---     | :------ | 
+| HP      | R12     | 
+| SPLim   | R15     | 
+| SP      | RBP     | 
+| R1      | RBX     | 
+| R2      | R14     | 
+| R3      | RSI     | 
+| R4      | RDI     | 
+| R5      | R8      | 
+| R6      | R9      | 
+

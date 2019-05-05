@@ -5,6 +5,8 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <title>Andreas Klebingers Blog - Windows x64 ABI quick reference.</title>
         <link rel="stylesheet" type="text/css" href="../css/default.css" />
+        <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
+
     </head>
     <body>
         <div id="header">
@@ -86,6 +88,53 @@ This stack space must be considered volatile by the caller.</li>
 </ul>
 <p>This can be used to store nonvolatile registers and other things.</p>
 <p><img src="../images/win_x64_stack_1.png" title="Typical windows stack" /></p>
+<h2 id="cmm-registers-mappings-on-amd64">Cmm Registers mappings on Amd64:</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Cmm</th>
+<th style="text-align: left;">Assemby</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>HP</td>
+<td style="text-align: left;">R12</td>
+</tr>
+<tr class="even">
+<td>SPLim</td>
+<td style="text-align: left;">R15</td>
+</tr>
+<tr class="odd">
+<td>SP</td>
+<td style="text-align: left;">RBP</td>
+</tr>
+<tr class="even">
+<td>R1</td>
+<td style="text-align: left;">RBX</td>
+</tr>
+<tr class="odd">
+<td>R2</td>
+<td style="text-align: left;">R14</td>
+</tr>
+<tr class="even">
+<td>R3</td>
+<td style="text-align: left;">RSI</td>
+</tr>
+<tr class="odd">
+<td>R4</td>
+<td style="text-align: left;">RDI</td>
+</tr>
+<tr class="even">
+<td>R5</td>
+<td style="text-align: left;">R8</td>
+</tr>
+<tr class="odd">
+<td>R6</td>
+<td style="text-align: left;">R9</td>
+</tr>
+</tbody>
+</table>
 
         </div>
         <div id="footer">
