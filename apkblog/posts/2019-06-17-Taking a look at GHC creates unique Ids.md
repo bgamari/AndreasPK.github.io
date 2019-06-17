@@ -1,14 +1,15 @@
 ---
-title: Taking a look at how GHC creates Unique Ids
+title: Taking a look at how GHC creates unique Ids
 tags: Haskell, GHC
 ---
 
 This post looks at `one of the most hammered bits in the whole compiler`, namely GHC's unique supply.
 
 GHC requires a steady supply of unique identifiers for various reasons.
-This is nothing special by itself. But I find the implementation quite interesting especially given how much it is used.
+There is nothing special about this. But I found the implementation quite interesting especially given how
+critical it is for the compiler.
 
-Towards the end there is some speculation about the performance impact of this code.
+I also found a performance issue with the code while writing this post so hurray for that.
 
 # The UniqSupply type
 
@@ -34,18 +35,23 @@ The reason for using a Tree over a list is simple, it allows us to pass a supply
 into pure functions without them ever needing to return their final supply.
 
 Taking uniques and splitting the supply when we need to pass one into a function
-is done with these two functions (and a small growth of utility wrappers around them).
+is done with these two functions and a small growth of utility wrappers around them.
 
 ```haskell
 takeUniqFromSupply (MkSplitUniqSupply n s1 _) = (mkUniqueGrimily n, s1)
 splitUniqSupply (MkSplitUniqSupply _ s1 s2) = (s1, s2)
 ```
 
-`mkUniqueGrimily` just wrapps the actual Int in a newtype.
+`mkUniqueGrimily` here just wrapps the actual Int in a newtype.
+This is useful to avoid mixing the two, which would lead to more nondeterminism.
 
-There is one issue here, our Unique space is limited to the Int range.
+There is one issue here. With the unique space limited to the Int range how exactly
+can we make sure both leafes of the tree get different numbers?
+
+We could use up one bit per split to achieve this but we would run out of bits rather fast that way.
+
 So if we don't want to half the available uniques with each split how exactly
-are we generating our infinite data structure?
+are we generating our "infinite" data structure?
 
 
 # Oh no - IO: Generating the magic Uniq Supply
@@ -81,13 +87,13 @@ mkSplitUniqSupply c
 
 ## The boring parts:
 
-The Char argument is stored in the higher order bits for each unique supply and preserved acroos splits.
-So we build a mask which get's applied to each integer using logical or.
-It encodes where uniques are generated. For example uniques produced by the native backend will use `'n'`.
+The Char argument ends up in the higher order bits for each unique supply and preserved acroos splits.
+So we build a mask which get's applied to each unique value using logical or.
+The character encodes where uniques are generated. For example uniques produced by the native backend will use `'n'` and so on.
 
 ## `mk_supply`
 
-The actual code to generate an uniqe supply is `mk_supply`.
+The code to generate an uniqe supply is contained in the recursive definition of `mk_supply`.
 
 The first which stands out is `unsafeInterleaveIO`:
 
@@ -97,6 +103,7 @@ If we squint really hard this seems like turning UniqSupply into: `MkSplitUniqSu
 The IO however is hidden with the power of unsafeInterleaveIO.
 
 This means whenever we split an UniqSupply and look at the result what we are really doing is running the mk_supply action:
+
 ```haskell
       genSym      >>= \ u ->
       mk_supply   >>= \ s1 ->
@@ -138,8 +145,11 @@ HsInt genSym(void) {
 }
 ```
 
-The only complicated part is for the multi threaded case.
-Here we rely on atomic increment to avoid two threads getting the same result.
+If we run using a single threaded, either by using the single threaded rts or
+by checking the numer of threads in use we can use simple addition to increment our unique.
+
+If we are in a multithreaded environment we have to rely on atomic increment.
+Otherwise we might get a race condition where two different supplies get assigned the same result.
 
 # Does it make sense to optimize this further?
 
@@ -162,14 +172,21 @@ To make sense of this numbers here are some scales for my desktop CPU:
 
 ## So is it worth it to try?
 
-I don't think it's worth to try to optimize the current approach. It's pretty much as good as it will get.
+I don't think it's worth to try to optimize the current approach further. It's pretty much as good as it will get.
 
-One thing that might be worth looking into is turning it i
-I think not. It would take a lot of effort to get it that much faster (if possible at all!).
+It would take a lot of effort to get it that much faster (if possible at all!).
 And there are certainly less optimized corners of GHC which would improve things more for less effort.
 
 It still seems like a lot of work is performed for essentially doing a unique = uniqueCounter++ operation.
 But it's not obvious how this could expressed better without resorting to very ugly low level hacks.
 
-I did however find a smallish issue with the existing code where it captured a lazy value.
-You can see the fix here: https://gitlab.haskell.org/ghc/ghc/merge_requests/1229#
+## Minor improvements:
+
+If one looks closely we can see that `mask` is only demanded when `mk_supply` is run. However while a call to `mkSplitUniqueSupply`
+will return `mk_supply` as an executable action it might never be run by the caller.
+
+This means the closure for `mk_supply` has to capture the Char in order to compute the mask in case it get's run. 
+GHC does also not seem to create a shareable closure for mask, which means if demanded mask will be recomputed for each
+supply constructor allocated. Quite the waste!
+
+The actual fix is just a simple bang. You can find the MR [here](https://gitlab.haskell.org/ghc/ghc/merge_requests/1229#) if you are interested.

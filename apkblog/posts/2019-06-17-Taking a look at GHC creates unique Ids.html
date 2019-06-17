@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <title>Andreas Klebingers Blog - Taking a look at how GHC creates Unique Ids</title>
+        <title>Andreas Klebingers Blog - Taking a look at how GHC creates unique Ids</title>
         <link rel="stylesheet" type="text/css" href="../css/default.css" />
         <link rel="stylesheet" type="text/css" href="../css/syntax.css" />
 
@@ -22,7 +22,7 @@
         </div>
 
         <div id="content">
-            <h1>Taking a look at how GHC creates Unique Ids</h1>
+            <h1>Taking a look at how GHC creates unique Ids</h1>
 
             <div class="info">
     Posted on June 17, 2019
@@ -30,8 +30,8 @@
 </div>
 
 <p>This post looks at <code>one of the most hammered bits in the whole compiler</code>, namely GHC’s unique supply.</p>
-<p>GHC requires a steady supply of unique identifiers for various reasons. This is nothing special by itself. But I find the implementation quite interesting especially given how much it is used.</p>
-<p>Towards the end there is some speculation about the performance impact of this code.</p>
+<p>GHC requires a steady supply of unique identifiers for various reasons. There is nothing special about this. But I found the implementation quite interesting especially given how critical it is for the compiler.</p>
+<p>I also found a performance issue with the code while writing this post so hurray for that.</p>
 <h1 id="the-uniqsupply-type">The UniqSupply type</h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb1-1" title="1"></a>
 <a class="sourceLine" id="cb1-2" title="2"><span class="co">-- | Unique Supply</span></a>
@@ -46,11 +46,13 @@
 <a class="sourceLine" id="cb1-11" title="11">                                <span class="co">-- when split =&gt; these two supplies</span></a></code></pre></div>
 <h1 id="making-use-of-the-supply">Making use of the supply</h1>
 <p>The principle seems easy. This being Haskell we have an infinite Tree, with each node containing one unique. The reason for using a Tree over a list is simple, it allows us to pass a supply into pure functions without them ever needing to return their final supply.</p>
-<p>Taking uniques and splitting the supply when we need to pass one into a function is done with these two functions (and a small growth of utility wrappers around them).</p>
+<p>Taking uniques and splitting the supply when we need to pass one into a function is done with these two functions and a small growth of utility wrappers around them.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" title="1">takeUniqFromSupply (<span class="dt">MkSplitUniqSupply</span> n s1 _) <span class="fu">=</span> (mkUniqueGrimily n, s1)</a>
 <a class="sourceLine" id="cb2-2" title="2">splitUniqSupply (<span class="dt">MkSplitUniqSupply</span> _ s1 s2) <span class="fu">=</span> (s1, s2)</a></code></pre></div>
-<p><code>mkUniqueGrimily</code> just wrapps the actual Int in a newtype.</p>
-<p>There is one issue here, our Unique space is limited to the Int range. So if we don’t want to half the available uniques with each split how exactly are we generating our infinite data structure?</p>
+<p><code>mkUniqueGrimily</code> here just wrapps the actual Int in a newtype. This is useful to avoid mixing the two, which would lead to more nondeterminism.</p>
+<p>There is one issue here. With the unique space limited to the Int range how exactly can we make sure both leafes of the tree get different numbers?</p>
+<p>We could use up one bit per split to achieve this but we would run out of bits rather fast that way.</p>
+<p>So if we don’t want to half the available uniques with each split how exactly are we generating our “infinite” data structure?</p>
 <h1 id="oh-no---io-generating-the-magic-uniq-supply">Oh no - IO: Generating the magic Uniq Supply</h1>
 <p>Here is the code:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" title="1"><span class="ot">mkSplitUniqSupply ::</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">UniqSupply</span></a>
@@ -76,9 +78,9 @@
 <a class="sourceLine" id="cb3-21" title="21">       mk_supply</a></code></pre></div>
 <p><code>genSym</code> is an IO action which generates a new unique integer each time it’s run, which we will look at later.</p>
 <h2 id="the-boring-parts">The boring parts:</h2>
-<p>The Char argument is stored in the higher order bits for each unique supply and preserved acroos splits. So we build a mask which get’s applied to each integer using logical or. It encodes where uniques are generated. For example uniques produced by the native backend will use <code>'n'</code>.</p>
+<p>The Char argument ends up in the higher order bits for each unique supply and preserved acroos splits. So we build a mask which get’s applied to each unique value using logical or. The character encodes where uniques are generated. For example uniques produced by the native backend will use <code>'n'</code> and so on.</p>
 <h2 id="mk_supply"><code>mk_supply</code></h2>
-<p>The actual code to generate an uniqe supply is <code>mk_supply</code>.</p>
+<p>The code to generate an uniqe supply is contained in the recursive definition of <code>mk_supply</code>.</p>
 <p>The first which stands out is <code>unsafeInterleaveIO</code>:</p>
 <p><code>unsafeInterleaveIO allows an IO computation to be deferred lazily. When passed a value of type IO a, the IO will only be performed when the value of the a is demanded</code></p>
 <p>If we squint really hard this seems like turning UniqSupply into: <code>MkSplitUniqSupply !Int (IO UniqSupply) (IO UniqSupply)</code>. The IO however is hidden with the power of unsafeInterleaveIO.</p>
@@ -112,7 +114,8 @@
 <a class="sourceLine" id="cb5-18" title="18">    <span class="cf">return</span> GenSymCounter;</a>
 <a class="sourceLine" id="cb5-19" title="19"><span class="pp">#endif</span></a>
 <a class="sourceLine" id="cb5-20" title="20">}</a></code></pre></div>
-<p>The only complicated part is for the multi threaded case. Here we rely on atomic increment to avoid two threads getting the same result.</p>
+<p>If we run using a single threaded, either by using the single threaded rts or by checking the numer of threads in use we can use simple addition to increment our unique.</p>
+<p>If we are in a multithreaded environment we have to rely on atomic increment. Otherwise we might get a race condition where two different supplies get assigned the same result.</p>
 <h1 id="does-it-make-sense-to-optimize-this-further">Does it make sense to optimize this further?</h1>
 <p>There are always things to improve, but let’s figure out if we should bother:</p>
 <h2 id="some-metrics">Some metrics:</h2>
@@ -126,10 +129,13 @@
 <li>Branch missprediction: 16-20 cycles.</li>
 </ul>
 <h2 id="so-is-it-worth-it-to-try">So is it worth it to try?</h2>
-<p>I don’t think it’s worth to try to optimize the current approach. It’s pretty much as good as it will get.</p>
-<p>One thing that might be worth looking into is turning it i I think not. It would take a lot of effort to get it that much faster (if possible at all!). And there are certainly less optimized corners of GHC which would improve things more for less effort.</p>
+<p>I don’t think it’s worth to try to optimize the current approach further. It’s pretty much as good as it will get.</p>
+<p>It would take a lot of effort to get it that much faster (if possible at all!). And there are certainly less optimized corners of GHC which would improve things more for less effort.</p>
 <p>It still seems like a lot of work is performed for essentially doing a unique = uniqueCounter++ operation. But it’s not obvious how this could expressed better without resorting to very ugly low level hacks.</p>
-<p>I did however find a smallish issue with the existing code where it captured a lazy value. You can see the fix here: https://gitlab.haskell.org/ghc/ghc/merge_requests/1229#</p>
+<h2 id="minor-improvements">Minor improvements:</h2>
+<p>If one looks closely we can see that <code>mask</code> is only demanded when <code>mk_supply</code> is run. However while a call to <code>mkSplitUniqueSupply</code> will return <code>mk_supply</code> as an executable action it might never be run by the caller.</p>
+<p>This means the closure for <code>mk_supply</code> has to capture the Char in order to compute the mask in case it get’s run. GHC does also not seem to create a shareable closure for mask, which means if demanded mask will be recomputed for each supply constructor allocated. Quite the waste!</p>
+<p>The actual fix is just a simple bang. You can find the MR <a href="https://gitlab.haskell.org/ghc/ghc/merge_requests/1229#">here</a> if you are interested.</p>
 
         </div>
         <div id="footer">
