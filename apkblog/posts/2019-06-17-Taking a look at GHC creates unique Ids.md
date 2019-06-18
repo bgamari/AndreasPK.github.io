@@ -42,11 +42,11 @@ takeUniqFromSupply (MkSplitUniqSupply n s1 _) = (mkUniqueGrimily n, s1)
 splitUniqSupply (MkSplitUniqSupply _ s1 s2) = (s1, s2)
 ```
 
-`mkUniqueGrimily` here just wrapps the actual Int in a newtype.
+`mkUniqueGrimily` here just wraps the actual Int in a newtype.
 This is useful to avoid mixing the two, which would lead to more nondeterminism.
 
 There is one issue here. With the unique space limited to the Int range how exactly
-can we make sure both leafes of the tree get different numbers?
+can we make sure both leaves of the tree get different numbers?
 
 We could use up one bit per split to achieve this but we would run out of bits rather fast that way.
 
@@ -87,8 +87,8 @@ mkSplitUniqSupply c
 
 ## The boring parts:
 
-The Char argument ends up in the higher order bits for each unique supply and preserved acroos splits.
-So we build a mask which get's applied to each unique value using logical or.
+The Char argument ends up in the higher order bits for each unique supply and preserved across splits.
+So we build a mask which gets applied to each unique value using logical or.
 The character encodes where uniques are generated. For example uniques produced by the native backend will use `'n'` and so on.
 
 ## `mk_supply`
@@ -111,7 +111,8 @@ This means whenever we split an UniqSupply and look at the result what we are re
       return (MkSplitUniqSupply (mask .|. u) s1 s2)
   ```
 
-This doesn't seem too complicated:  
+This doesn't seem too complicated:
+
 * We get a new number from genSym
 * New (unevaluated) supplies using mk_supply
 * And return them inside a new MkSplitUniqSupply.
@@ -161,7 +162,7 @@ We can find out using printf in getSym that GHC generates 170k Uniques for a tes
 
 This means **34000 Uniques/Second**.
 
-For a **speedup by 0.1%** we need to shave off ~0.001 seconds. For my notebook runnint at 2.6GHZ this is **2 600 000 Cycles** or
+For a **speedup by 0.1%** we need to shave off ~0.001 seconds. For my notebook running at 2.6GHZ this is **2 600 000 Cycles** or
 **~75 Cycles per UniqueSupply creating**.
 
 To make sense of this numbers here are some scales for my desktop CPU:
@@ -185,7 +186,7 @@ But it's not obvious how this could expressed better without resorting to very u
 If one looks closely we can see that `mask` is only demanded when `mk_supply` is run. However while a call to `mkSplitUniqueSupply`
 will return `mk_supply` as an executable action it might never be run by the caller.
 
-This means the closure for `mk_supply` has to capture the Char in order to compute the mask in case it get's run. 
+This means the closure for `mk_supply` has to capture the Char in order to compute the mask in case it gets run. 
 GHC does also not seem to create a shareable closure for mask, which means if demanded mask will be recomputed for each
 supply constructor allocated. Quite the waste!
 
