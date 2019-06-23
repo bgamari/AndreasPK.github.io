@@ -43,8 +43,8 @@
 <li>So we pretend we never heard of text/bytestring and go with [Char].</li>
 </ul>
 <p>In order to get a bunch of strings I took a ghc dump and split it into words. So the spirit of the code is something like this:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" title="1">bench <span class="fu">words</span> size <span class="fu">=</span></a>
-<a class="sourceLine" id="cb2-2" title="2">  bench <span class="st">&quot;name&quot;</span> <span class="fu">$</span> whnf (<span class="fu">length</span> <span class="fu">.</span> nub<span class="fu">*</span>) (<span class="fu">take</span> size <span class="fu">words</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" title="1">bench <span class="fu">words</span> size <span class="ot">=</span></a>
+<a class="sourceLine" id="cb2-2" title="2">  bench <span class="st">&quot;name&quot;</span> <span class="op">$</span> whnf (<span class="fu">length</span> <span class="op">.</span> nub<span class="op">*</span>) (<span class="fu">take</span> size <span class="fu">words</span>)</a></code></pre></div>
 <p><code>length</code> is only there to make sure we have evaluated the whole structure of the list. This avoids the overhead of nf which would be traversing all strings completely which would only distort the results.</p>
 <p>I also skipped length in one variant to check the performance in the case of laziness, but it’s not that interesting.</p>
 <h1 id="which-nub-variants-are-we-looking-at.">Which nub* variants are we looking at.</h1>

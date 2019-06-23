@@ -41,14 +41,14 @@
 <a class="sourceLine" id="cb1-6" title="6"><span class="co">-- also manufacture an arbitrary number of further 'UniqueSupply' values,</span></a>
 <a class="sourceLine" id="cb1-7" title="7"><span class="co">-- which will be distinct from the first and from all others.</span></a>
 <a class="sourceLine" id="cb1-8" title="8"><span class="kw">data</span> <span class="dt">UniqSupply</span></a>
-<a class="sourceLine" id="cb1-9" title="9">  <span class="fu">=</span> <span class="dt">MkSplitUniqSupply</span> <span class="ot">{-# UNPACK #-}</span> <span class="fu">!</span><span class="dt">Int</span> <span class="co">-- make the Unique with this</span></a>
+<a class="sourceLine" id="cb1-9" title="9">  <span class="ot">=</span> <span class="dt">MkSplitUniqSupply</span> <span class="ot">{-# UNPACK #-}</span> <span class="op">!</span><span class="dt">Int</span> <span class="co">-- make the Unique with this</span></a>
 <a class="sourceLine" id="cb1-10" title="10">                   <span class="dt">UniqSupply</span> <span class="dt">UniqSupply</span></a>
 <a class="sourceLine" id="cb1-11" title="11">                                <span class="co">-- when split =&gt; these two supplies</span></a></code></pre></div>
 <h1 id="making-use-of-the-supply">Making use of the supply</h1>
 <p>The principle seems easy. This being Haskell we have an infinite Tree, with each node containing one unique. The reason for using a Tree over a list is simple, it allows us to pass a supply into pure functions without them ever needing to return their final supply.</p>
 <p>Taking uniques and splitting the supply when we need to pass one into a function is done with these two functions and a small growth of utility wrappers around them.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" title="1">takeUniqFromSupply (<span class="dt">MkSplitUniqSupply</span> n s1 _) <span class="fu">=</span> (mkUniqueGrimily n, s1)</a>
-<a class="sourceLine" id="cb2-2" title="2">splitUniqSupply (<span class="dt">MkSplitUniqSupply</span> _ s1 s2) <span class="fu">=</span> (s1, s2)</a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" title="1">takeUniqFromSupply (<span class="dt">MkSplitUniqSupply</span> n s1 _) <span class="ot">=</span> (mkUniqueGrimily n, s1)</a>
+<a class="sourceLine" id="cb2-2" title="2">splitUniqSupply (<span class="dt">MkSplitUniqSupply</span> _ s1 s2) <span class="ot">=</span> (s1, s2)</a></code></pre></div>
 <p><code>mkUniqueGrimily</code> here just wraps the actual Int in a newtype. This is useful to avoid mixing the two, which would lead to more nondeterminism.</p>
 <p>There is one issue here. With the unique space limited to the Int range how exactly can we make sure both leaves of the tree get different numbers?</p>
 <p>We could use up one bit per split to achieve this but we would run out of bits rather fast that way.</p>
@@ -60,7 +60,7 @@
 <a class="sourceLine" id="cb3-3" title="3"><span class="co">-- be distinct from those of all calls to this function in the compiler</span></a>
 <a class="sourceLine" id="cb3-4" title="4"><span class="co">-- for the values generated to be truly unique.</span></a>
 <a class="sourceLine" id="cb3-5" title="5">mkSplitUniqSupply c</a>
-<a class="sourceLine" id="cb3-6" title="6">  <span class="fu">=</span> <span class="kw">case</span> <span class="fu">ord</span> c <span class="ot">`shiftL`</span> uNIQUE_BITS <span class="kw">of</span></a>
+<a class="sourceLine" id="cb3-6" title="6">  <span class="ot">=</span> <span class="kw">case</span> <span class="fu">ord</span> c <span class="ot">`shiftL`</span> uNIQUE_BITS <span class="kw">of</span></a>
 <a class="sourceLine" id="cb3-7" title="7">     mask <span class="ot">-&gt;</span> <span class="kw">let</span></a>
 <a class="sourceLine" id="cb3-8" title="8">        <span class="co">-- here comes THE MAGIC:</span></a>
 <a class="sourceLine" id="cb3-9" title="9"></a>
@@ -68,11 +68,11 @@
 <a class="sourceLine" id="cb3-11" title="11"><span class="ot">        mk_supply ::</span> <span class="dt">IO</span> <span class="dt">UniqSupply</span></a>
 <a class="sourceLine" id="cb3-12" title="12">        mk_supply</a>
 <a class="sourceLine" id="cb3-13" title="13">          <span class="co">-- NB: Use unsafeInterleaveIO for thread-safety.</span></a>
-<a class="sourceLine" id="cb3-14" title="14">          <span class="fu">=</span> unsafeInterleaveIO (</a>
-<a class="sourceLine" id="cb3-15" title="15">                genSym      <span class="fu">&gt;&gt;=</span> \ u <span class="ot">-&gt;</span></a>
-<a class="sourceLine" id="cb3-16" title="16">                mk_supply   <span class="fu">&gt;&gt;=</span> \ s1 <span class="ot">-&gt;</span></a>
-<a class="sourceLine" id="cb3-17" title="17">                mk_supply   <span class="fu">&gt;&gt;=</span> \ s2 <span class="ot">-&gt;</span></a>
-<a class="sourceLine" id="cb3-18" title="18">                <span class="fu">return</span> (<span class="dt">MkSplitUniqSupply</span> (mask <span class="fu">.|.</span> u) s1 s2)</a>
+<a class="sourceLine" id="cb3-14" title="14">          <span class="ot">=</span> unsafeInterleaveIO (</a>
+<a class="sourceLine" id="cb3-15" title="15">                genSym      <span class="op">&gt;&gt;=</span> \ u <span class="ot">-&gt;</span></a>
+<a class="sourceLine" id="cb3-16" title="16">                mk_supply   <span class="op">&gt;&gt;=</span> \ s1 <span class="ot">-&gt;</span></a>
+<a class="sourceLine" id="cb3-17" title="17">                mk_supply   <span class="op">&gt;&gt;=</span> \ s2 <span class="ot">-&gt;</span></a>
+<a class="sourceLine" id="cb3-18" title="18">                <span class="fu">return</span> (<span class="dt">MkSplitUniqSupply</span> (mask <span class="op">.|.</span> u) s1 s2)</a>
 <a class="sourceLine" id="cb3-19" title="19">            )</a>
 <a class="sourceLine" id="cb3-20" title="20">       <span class="kw">in</span></a>
 <a class="sourceLine" id="cb3-21" title="21">       mk_supply</a></code></pre></div>
@@ -85,10 +85,10 @@
 <p><code>unsafeInterleaveIO allows an IO computation to be deferred lazily. When passed a value of type IO a, the IO will only be performed when the value of the a is demanded</code></p>
 <p>If we squint really hard this seems like turning UniqSupply into: <code>MkSplitUniqSupply !Int (IO UniqSupply) (IO UniqSupply)</code>. The IO however is hidden with the power of unsafeInterleaveIO.</p>
 <p>This means whenever we split an UniqSupply and look at the result what we are really doing is running the mk_supply action:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb4-1" title="1">      genSym      <span class="fu">&gt;&gt;=</span> \ u <span class="ot">-&gt;</span></a>
-<a class="sourceLine" id="cb4-2" title="2">      mk_supply   <span class="fu">&gt;&gt;=</span> \ s1 <span class="ot">-&gt;</span></a>
-<a class="sourceLine" id="cb4-3" title="3">      mk_supply   <span class="fu">&gt;&gt;=</span> \ s2 <span class="ot">-&gt;</span></a>
-<a class="sourceLine" id="cb4-4" title="4">      <span class="fu">return</span> (<span class="dt">MkSplitUniqSupply</span> (mask <span class="fu">.|.</span> u) s1 s2)</a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb4-1" title="1">      genSym      <span class="op">&gt;&gt;=</span> \ u <span class="ot">-&gt;</span></a>
+<a class="sourceLine" id="cb4-2" title="2">      mk_supply   <span class="op">&gt;&gt;=</span> \ s1 <span class="ot">-&gt;</span></a>
+<a class="sourceLine" id="cb4-3" title="3">      mk_supply   <span class="op">&gt;&gt;=</span> \ s2 <span class="ot">-&gt;</span></a>
+<a class="sourceLine" id="cb4-4" title="4">      <span class="fu">return</span> (<span class="dt">MkSplitUniqSupply</span> (mask <span class="op">.|.</span> u) s1 s2)</a></code></pre></div>
 <p>This doesn’t seem too complicated:</p>
 <ul>
 <li>We get a new number from genSym</li>

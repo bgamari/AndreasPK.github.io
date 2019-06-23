@@ -61,7 +61,7 @@
 <p>Consider the following Cmm code for factorial:</p>
 <h3 id="cmm-code">Cmm Code</h3>
 <div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb1-1" title="1">       c4Ba: stack check</a>
-<a class="sourceLine" id="cb1-2" title="2">           <span class="cf">if</span> ((Sp + <span class="dv">-16</span>) &lt; SpLim) (likely: False) <span class="cf">goto</span> c4Bb; <span class="cf">else</span> <span class="cf">goto</span> c4Bc;</a>
+<a class="sourceLine" id="cb1-2" title="2">           <span class="cf">if</span> ((Sp + -<span class="dv">16</span>) &lt; SpLim) (likely: False) <span class="cf">goto</span> c4Bb; <span class="cf">else</span> <span class="cf">goto</span> c4Bc;</a>
 <a class="sourceLine" id="cb1-3" title="3">       c4Bb: run gc <span class="cf">if</span> stack exhausted</a>
 <a class="sourceLine" id="cb1-4" title="4">           R2 = R2;</a>
 <a class="sourceLine" id="cb1-5" title="5">           R1 = $wfactorial_closure;</a>
@@ -75,7 +75,7 @@
 <a class="sourceLine" id="cb1-13" title="13">           I64[Sp - <span class="dv">8</span>] = _s4A8::I64;</a>
 <a class="sourceLine" id="cb1-14" title="14">           Sp = Sp - <span class="dv">16</span>;</a>
 <a class="sourceLine" id="cb1-15" title="15">           call $wfactorial_info(R2) returns to c4Bh, args: <span class="dv">8</span>, res: <span class="dv">8</span>, upd: <span class="dv">8</span>;</a>
-<a class="sourceLine" id="cb1-16" title="16">       c4Bh: x * factorial (x<span class="dv">-1</span>)</a>
+<a class="sourceLine" id="cb1-16" title="16">       c4Bh: x * factorial (x-<span class="dv">1</span>)</a>
 <a class="sourceLine" id="cb1-17" title="17">           R1 = I64[Sp + <span class="dv">8</span>] * R1;</a>
 <a class="sourceLine" id="cb1-18" title="18">           Sp = Sp + <span class="dv">16</span>;</a>
 <a class="sourceLine" id="cb1-19" title="19">           call (P64[Sp])(R1) args: <span class="dv">8</span>, res: <span class="dv">0</span>, upd: <span class="dv">8</span>;</a>
