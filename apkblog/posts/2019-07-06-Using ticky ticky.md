@@ -5,6 +5,13 @@ tags: Haskell, GHC
 
 In this post I will summarize the steps required to add a counter which will be used with [`-ticky` profiling](https://gitlab.haskell.org/ghc/ghc/wikis/debugging/ticky-ticky).
 
+We will then use this to try and estimate the impact a partial fix for [#8905](https://gitlab.haskell.org/ghc/ghc/issues/8905) would have.
+
+The short summary of the issue is that when GHC checks if a value is already evaluated, it *unconditionally* sets up the stack for *potentially* evaluating
+the value.  
+There are good reasons for this, but when dealing with the only argument of a function they do not apply. So we want
+to estimate the impact of special casing that particular pattern.
+
 # What is ticky profiling.
 
 It's a profiling method in which GHC annotates the **optimized** program with runtime counters.

@@ -30,6 +30,9 @@
 </div>
 
 <p>In this post I will summarize the steps required to add a counter which will be used with <a href="https://gitlab.haskell.org/ghc/ghc/wikis/debugging/ticky-ticky"><code>-ticky</code> profiling</a>.</p>
+<p>We will then use this to try and estimate the impact a partial fix for <a href="https://gitlab.haskell.org/ghc/ghc/issues/8905">#8905</a> would have.</p>
+<p>The short summary of the issue is that when GHC checks if a value is already evaluated, it <em>unconditionally</em> sets up the stack for <em>potentially</em> evaluating the value.<br />
+There are good reasons for this, but when dealing with the only argument of a function they do not apply. So we want to estimate the impact of special casing that particular pattern.</p>
 <h1 id="what-is-ticky-profiling.">What is ticky profiling.</h1>
 <p>It’s a profiling method in which GHC annotates the <strong>optimized</strong> program with runtime counters.</p>
 <p>This means core and stg passes are not affected by the profiling annotations and the final executable will be closer to a release build than the case with <a href="https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/profiling.html">cost center profiling.</a></p>
