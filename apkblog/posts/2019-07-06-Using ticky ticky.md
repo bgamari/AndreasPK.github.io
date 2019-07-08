@@ -5,27 +5,20 @@ tags: Haskell, GHC
 
 In this post I will summarize the steps required to add a counter which will be used with [`-ticky` profiling](https://gitlab.haskell.org/ghc/ghc/wikis/debugging/ticky-ticky).
 
-We will then use this to try and estimate the impact a partial fix for [#8905](https://gitlab.haskell.org/ghc/ghc/issues/8905) would have.
-
-The short summary of the issue is that when GHC checks if a value is already evaluated, it *unconditionally* sets up the stack for *potentially* evaluating
-the value.  
-There are good reasons for this, but when dealing with the only argument of a function they do not apply. So we want
-to estimate the impact of special casing that particular pattern.
-
-# What is ticky profiling.
+# What is ticky profiling?
 
 It's a profiling method in which GHC annotates the **optimized** program with runtime counters.
 
-This means core and stg passes are not affected by the profiling annotations and the final executable will be
-closer to a release build than the case with [cost center profiling.](https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/profiling.html)
+This means Core and STG passes are not affected by the profiling annotations and the final executable will be
+closer to a release build than the case with [cost center profiling](https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/profiling.html).
 
-The large downside is of course that we don't get "stacks". Knowing that `myExpensiveFunction` was called 5 Billion times is no doubt useful.
-But even more useful is it if we know that it's called by `thisFunctionWithARedundantBang`.
+The large downside is of course that we don't get "stacks". Knowing that `myExpensiveFunction` was called five billion times is no doubt useful.
+But even more useful is if we know that it's called by `thisFunctionWithARedundantBang`.
 
-Despite the drawbacks I still found it quite usefull when investigating performance hotspots in the past. I've recently also
+Despite the drawbacks I still found it quite useful when investigating performance hotspots in the past. I've recently also
 used it to add custom counters to characterize the possible performance impact of this optimization for a custom branch.
 
-Either way this post is not about WHAT ticky-ticky is, the wiki has most of the info on that.  
+Either way this post is not about WHAT ticky-ticky is, the [Wiki](https://gitlab.haskell.org/ghc/ghc/wikis/debugging/ticky-ticky) has most of the info on that.  
 It's about how we can add new counters!
 
 # Adding the counter
